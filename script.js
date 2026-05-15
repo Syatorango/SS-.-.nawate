@@ -24,14 +24,18 @@ function renderCalendar() {
 
     for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
-    for (let i = 1; i <= lastDate; i++) {
-        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    for (let d = 1; d <= daysInMonth; d++) {
         const dayEl = document.createElement('div');
-        dayEl.className = 'day' + (dateStr === selectedDate ? ' selected' : '');
-        dayEl.innerText = i;
-        dayEl.onclick = () => selectDate(dateStr);
+        dayEl.className = 'calendar-day';
+        dayEl.innerText = d;
+        
+        const dateStr = formatDate(new Date(year, month, d));
+        if (dateStr === formatDate(selectedDate)) dayEl.classList.add('selected');
+
+        dayEl.onclick = () => selectDate(year, month, d);
         grid.appendChild(dayEl);
     }
+    renderTodoList();
 }
 
 function selectDate(date) {
