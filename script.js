@@ -7,7 +7,9 @@ window.onload = () => {
 
 function renderCalendar() {
     const grid = document.getElementById('calendar-grid');
+    if (!grid) return;
     grid.innerHTML = '';
+    
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
@@ -24,18 +26,14 @@ function renderCalendar() {
 
     for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
 
-    for (let d = 1; d <= daysInMonth; d++) {
+    for (let i = 1; i <= lastDate; i++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const dayEl = document.createElement('div');
-        dayEl.className = 'calendar-day';
-        dayEl.innerText = d;
-        
-        const dateStr = formatDate(new Date(year, month, d));
-        if (dateStr === formatDate(selectedDate)) dayEl.classList.add('selected');
-
-        dayEl.onclick = () => selectDate(year, month, d);
+        dayEl.className = 'day' + (dateStr === selectedDate ? ' selected' : '');
+        dayEl.innerText = i;
+        dayEl.onclick = () => selectDate(dateStr);
         grid.appendChild(dayEl);
     }
-    renderTodoList();
 }
 
 function selectDate(date) {
@@ -49,19 +47,18 @@ function addTodo() {
     const text = document.getElementById('todo-input').value;
     const start = document.getElementById('start-time').value;
     const end = document.getElementById('end-time').value;
-    const priority = document.getElementById('priority-input').value; // これを追加
+    const priority = document.getElementById('priority-input').value;
 
     if (!text || !start) return alert("内容と時間を入力してね");
 
-    // ここからが newTodo のカタマリです
     const newTodo = {
         id: Date.now(),
         date: selectedDate,
         start: start,
         end: end,
         text: text,
-        priority: priority, // 重要度を保存
-        completed: false    // 最初は未完了
+        priority: priority,
+        completed: false
     };
 
     const todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
@@ -74,6 +71,7 @@ function addTodo() {
 
 function loadTodos() {
     const list = document.getElementById('todo-list');
+    if (!list) return;
     list.innerHTML = '';
     const todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
     const daily = todos.filter(t => t.date === selectedDate).sort((a,b) => a.start > b.start ? 1 : -1);
@@ -84,17 +82,17 @@ function loadTodos() {
 
     daily.forEach(t => {
         const item = document.createElement('div');
-item.className = `todo-item ${t.priority} ${t.completed ? 'is-completed' : ''}`;
-item.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleComplete(${t.id})">
-        <div>
-            <div style="font-size:0.8rem; color:#666;">${t.start} ～ ${t.end}</div>
-            <div style="font-weight:bold; ${t.completed ? 'text-decoration: line-through; color: #888;' : ''}">${t.text}</div>
-        </div>
-    </div>
-    <button onclick="deleteTodo(${t.id})" style="width:auto; margin:0; padding:5px; background:#ff7675; color:white;">削除</button>
-`;
+        item.className = `todo-item ${t.priority} ${t.completed ? 'is-completed' : ''}`;
+        item.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleComplete(${t.id})">
+                <div>
+                    <div style="font-size:0.8rem; color:#666;">${t.start} ～ ${t.end}</div>
+                    <div style="font-weight:bold; ${t.completed ? 'text-decoration: line-through; color: #888;' : ''}">${t.text}</div>
+                </div>
+            </div>
+            <button onclick="deleteTodo(${t.id})" style="width:auto; margin:0; padding:5px; background:#ff7675; color:white;">削除</button>
+        `;
         list.appendChild(item);
     });
 }
@@ -104,6 +102,16 @@ function deleteTodo(id) {
     todos = todos.filter(t => t.id !== id);
     localStorage.setItem('calDataV4', JSON.stringify(todos));
     loadTodos();
+}
+
+function toggleComplete(id) {
+    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.completed = !todo.completed;
+        localStorage.setItem('calDataV4', JSON.stringify(todos));
+        loadTodos();
+    }
 }
 
 function openBulkModal() { document.getElementById('bulk-modal').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; }
@@ -116,6 +124,8 @@ function executeBulkAdd() {
     const checkboxes = document.querySelectorAll('#bulk-modal input[type="checkbox"]:checked');
     const targetDays = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
+    if (!text || !start || targetDays.length === 0) return alert("内容、時間、曜日を選択してね");
+
     let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
     const now = new Date();
     const lastDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -124,19 +134,10 @@ function executeBulkAdd() {
         const d = new Date(now.getFullYear(), now.getMonth(), i);
         if (targetDays.includes(d.getDay())) {
             const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            todos.push({ id: Date.now() + i, date: dateStr, start, end, text });
+            todos.push({ id: Date.now() + i, date: dateStr, start, end, text, priority: 'normal', completed: false });
         }
     }
     localStorage.setItem('calDataV4', JSON.stringify(todos));
     closeModals();
     loadTodos();
-}
-function toggleComplete(id) {
-    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-        todo.completed = !todo.completed;
-        localStorage.setItem('calDataV4', JSON.stringify(todos));
-        loadTodos();
-    }
 }
