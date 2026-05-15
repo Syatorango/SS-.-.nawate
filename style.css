@@ -21,3 +21,83 @@ button { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: p
 .todo-item.low { border-left: 8px solid #3498db; background: #f0f7ff; }
 
 .todo-item.is-completed { opacity: 0.6; border-left-color: #ccc; }
+
+.day-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.day-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.day-checkboxes input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+/* ===== スマホ対応 ===== */
+@media screen and (max-width: 768px) {
+
+    body {
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        gap: 15px;
+    }
+
+    .calendar-container,
+    .side-panel {
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .card {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+
+    .day {
+        font-size: 0.85rem;
+    }
+
+    .time-inputs {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    input,
+    select,
+    button {
+        font-size: 16px; /* iPhoneのズーム防止 */
+    }
+
+    .todo-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .todo-item button {
+        width: 100%;
+    }
+
+    .modal {
+        width: 90%;
+        max-width: 350px;
+    }
+
+    .day-checkboxes {
+        justify-content: center;
+    }
+}

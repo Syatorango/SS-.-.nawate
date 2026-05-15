@@ -34,6 +34,9 @@
         <div class="card list-card">
             <h2>本日のタイムライン</h2>
             <div id="todo-list"></div>
+            <button class="btn-cancel" onclick="deleteCheckedTodos()">
+    ✔ 完了した予定をまとめて削除
+</button>
         </div>
     </div>
 
@@ -48,6 +51,7 @@
         <button class="btn-bulk" onclick="executeBulkAdd()">一括登録実行</button>
         <button class="btn-cancel" onclick="closeModals()">キャンセル</button>
     </div>
+
 
     <script src="script.js"></script> </body>
 </html>

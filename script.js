@@ -141,3 +141,19 @@ function executeBulkAdd() {
     closeModals();
     loadTodos();
 }
+
+function deleteCheckedTodos() {
+    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
+
+    // 今表示している日の、チェック済み予定IDを取得
+    const checkedIds = todos
+        .filter(t => t.date === selectedDate && t.completed)
+        .map(t => t.id);
+
+    // チェック済み以外を残す
+    todos = todos.filter(t => !checkedIds.includes(t.id));
+
+    localStorage.setItem('calDataV4', JSON.stringify(todos));
+
+    loadTodos();
+}
