@@ -1,0 +1,23 @@
+:root { --primary: #3498db; --success: #2ecc71; --bg: #f8f9fa; }
+body { font-family: sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; gap: 20px; }
+.card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.calendar-container { width: 350px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; font-size: 0.9rem; }
+.day.selected { background: var(--primary); color: white; }
+.side-panel { width: 400px; display: flex; flex-direction: column; gap: 20px; }
+.time-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
+.label { font-size: 0.8rem; color: #7f8c8d; }
+input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+button { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+.btn-main { background: var(--primary); color: white; }
+.btn-bulk { background: var(--success); color: white; }
+.btn-cancel { background: #ccc; }
+.todo-item { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; border-radius: 5px; }
+.modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; z-index: 100; border-radius: 15px; width: 300px; }
+.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; }
+
+.todo-item.high { border-left: 8px solid #ff4d4d; background: #fff5f5; }
+.todo-item.low { border-left: 8px solid #3498db; background: #f0f7ff; }
+
+.todo-item.is-completed { opacity: 0.6; border-left-color: #ccc; }
