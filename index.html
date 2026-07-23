@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>SS情報班．予定管理アプリ</title>
-    <link rel="stylesheet" href="style.css"> </head>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
     <div class="overlay" id="overlay" onclick="closeModals()"></div>
 
@@ -20,12 +22,12 @@
                 <div><span class="label">終了</span><input type="time" id="end-time" value="10:00"></div>
             </div>
             <span class="label">予定の内容</span>
-           <span class="label">重要度</span>
-<select id="priority-input">
-    <option value="normal">ふつう</option>
-    <option value="high">重要（赤）</option>
-    <option value="low">後回し（青）</option>
-</select>
+            <span class="label">重要度</span>
+            <select id="priority-input">
+                <option value="normal">ふつう</option>
+                <option value="high">重要（赤）</option>
+                <option value="low">後回し（青）</option>
+            </select>
             <input type="text" id="todo-input" placeholder="例：プログラミング">
             <button class="btn-main" onclick="addTodo()">この日だけ保存</button>
             <button class="btn-bulk" onclick="openBulkModal()"> ✨ 複数日に一括登録 ✨</button>
@@ -33,10 +35,35 @@
 
         <div class="card list-card">
             <h2>本日のタイムライン</h2>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button onclick="toggleView('list')" class="btn-main" style="margin:0; padding:8px;">リスト表示</button>
+                <button onclick="toggleView('chart')" class="btn-main" style="margin:0; padding:8px; background:#9b59b6;">円グラフ表示</button>
+            </div>
+
             <div id="todo-list"></div>
+
+            <div id="chart-view" style="display: none; text-align: center; margin-top: 20px;">
+                <div id="time-chart" style="width: 250px; height: 250px; border-radius: 50%; margin: 0 auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); border: 4px solid #eee; position: relative;">
+                    <div style="position: absolute; top: 5px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold; color: #777;">24</div>
+                    <div style="position: absolute; top: 30px; right: 30px; font-size: 0.75rem; font-weight: bold; color: #777;">3</div>
+                    <div style="position: absolute; top: 50%; right: 5px; transform: translateY(-50%); font-size: 0.75rem; font-weight: bold; color: #777;">6</div>
+                    <div style="position: absolute; bottom: 30px; right: 30px; font-size: 0.75rem; font-weight: bold; color: #777;">9</div>
+                    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold; color: #777;">12</div>
+                    <div style="position: absolute; bottom: 30px; left: 30px; font-size: 0.75rem; font-weight: bold; color: #777;">15</div>
+                    <div style="position: absolute; top: 50%; left: 5px; transform: translateY(-50%); font-size: 0.75rem; font-weight: bold; color: #777;">18</div>
+                    <div style="position: absolute; top: 30px; left: 30px; font-size: 0.75rem; font-weight: bold; color: #777;">21</div>
+
+                    <div style="position: absolute; top: 45px; left: 45px; width: 160px; height: 160px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #555; box-shadow: 0 0 5px rgba(0,0,0,0.05); z-index: 10;">
+                        24時間 schedule
+                    </div>
+                </div>
+                <div id="chart-legend" style="margin-top: 20px; text-align: left; max-height: 150px; overflow-y: auto; padding: 10px;"></div>
+            </div>
+
             <button class="btn-cancel" onclick="deleteCheckedTodos()">
-    ✔ 完了した予定をまとめて削除
-</button>
+                ✔ 完了した予定をまとめて削除
+            </button>
         </div>
     </div>
 
@@ -52,7 +79,6 @@
         <button class="btn-cancel" onclick="closeModals()">キャンセル</button>
     </div>
 
- 
-
-    <script src="script.js"></script> </body>
+    <script src="script.js"></script>
+</body>
 </html>

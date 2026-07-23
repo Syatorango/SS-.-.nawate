@@ -101,29 +101,3 @@ button { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: p
         justify-content: center;
     }
 }
-
-/* 重複がある日のスタイル（日付の下に小さな赤いドットを表示します） */
-.day.has-overlap {
-    background-color: #ffeaa7; /* 薄い警告色 */
-    color: #d63031; /* 文字を濃い赤に */
-    border: 2px dashed #ff7675; /* 点線の枠線 */
-    font-weight: bold;
-}
-.day.has-overlap::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background-color: #ff7675; /* 警告の赤ドット */
-    border-radius: 50%;
-}
-
-/* 選択されている時はドットを白にして見やすくします */
-.day.selected.has-overlap {
-    background-color: #ff7675; /* 選択時はハッキリした赤に */
-    color: white;
-    border: 2px solid #d63031;
-}
