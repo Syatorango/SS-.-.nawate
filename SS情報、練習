@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>まぁ、最初だからね？</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Webアプリの基盤</h1>
+        <p id="message">ボタンを押すと何かが起きるよ！</p>
+        
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="何か入力してね">
+            <button id="action-btn">実行！</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+    
+
+
+
+
+    

@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>SS情報班．予定管理アプリ</title>
+    <title>詳細スケジュール管理</title>
     <link rel="stylesheet" href="style.css"> </head>
 <body>
     <div class="overlay" id="overlay" onclick="closeModals()"></div>
@@ -28,15 +28,12 @@
 </select>
             <input type="text" id="todo-input" placeholder="例：プログラミング">
             <button class="btn-main" onclick="addTodo()">この日だけ保存</button>
-            <button class="btn-bulk" onclick="openBulkModal()"> ✨ 複数日に一括登録 ✨</button>
+            <button class="btn-bulk" onclick="openBulkModal()">✨ 複数日に一括登録</button>
         </div>
 
         <div class="card list-card">
             <h2>本日のタイムライン</h2>
             <div id="todo-list"></div>
-            <button class="btn-cancel" onclick="deleteCheckedTodos()">
-    ✔ 完了した予定をまとめて削除
-</button>
         </div>
     </div>
 
@@ -51,8 +48,6 @@
         <button class="btn-bulk" onclick="executeBulkAdd()">一括登録実行</button>
         <button class="btn-cancel" onclick="closeModals()">キャンセル</button>
     </div>
-
- 
 
     <script src="script.js"></script> </body>
 </html>
