@@ -1,178 +1,516 @@
-let currentDate = new Date();
-let selectedDate = new Date().toISOString().split('T')[0];
+let tasks = JSON.parse(localStorage.getItem('my_tasks')) || [];
+let currentFilter = 'all';
+let selectedDateStr = null;
+let currentListMode = 'card';
+let categoryChart = null;
 
-window.onload = () => {
-    renderCalendar();
-    selectDate(selectedDate);
+let calDate = new Date();
+
+// カテゴリ定義
+const categories = {
+  all: 'すべて',
+  starred: '★ お気に入り',
+  work: '仕事',
+  house: '家事',
+  hobby: '趣味',
+  study: '勉強',
+  other: 'その他'
 };
 
+// ★外側（重要度）：直感的な信号機カラー
+const priorityColors = { 
+  high: '#ff4d4f',   // 赤
+  medium: '#ffc53d', // 黄
+  low: '#73d13d'     // 緑
+};
+
+// ★内側（カテゴリ）：重要度と被らない識別用カラー
+const categoryColors = { 
+  work: '#1890ff',   // ブルー
+  house: '#ff85c0',  // ローズピンク
+  hobby: '#722ed1',  // ディープパープル
+  study: '#13c2c2',  // ターコイズシアン
+  other: '#f17126'   // オレンジ
+};
+
+// データ保存 & 全画面の再描画
+function saveAndRender() {
+  try {
+    localStorage.setItem('my_tasks', JSON.stringify(tasks));
+  } catch(e) {}
+  
+  renderCategoryTabs();
+  renderTasks();
+  renderCalendar();
+  
+  try {
+    renderChart();
+  } catch (e) {
+    console.error("円グラフの描画エラー:", e);
+  }
+}
+
+/* --- 表示モード切り替え --- */
+function setListMode(mode) {
+  currentListMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  const btn = document.getElementById('btn-mode-' + mode);
+  if (btn) btn.classList.add('active');
+
+  const container = document.getElementById('taskListContainer');
+  if (container) container.className = 'view-' + mode;
+  
+  renderTasks();
+}
+
+/* --- タスクの追加・削除・お気に入り --- */
+// 一括削除機能
+
+const button = document.getElementById("DeleteButton");
+button.addEventListener("click", function () {
+var list_delete = [];
+const starredTasks = tasks.filter(task => task.isStarred);
+starredTasks.forEach(task => {
+  deleteTask2(task.id);
+});
+
+});
+
+// 一括削除機能
+const ClearButton = document.getElementById("ClearButton");
+ClearButton.addEventListener("click", function () {
+var list_delete = [];
+const clearedTasks = tasks.filter(task => task.isCleared);
+clearedTasks.forEach(task => {
+  deleteTask2(task.id);
+});
+
+
+});
+function addTask() {
+  const titleEl = document.getElementById('taskTitle');
+  const datetimeEl = document.getElementById('taskDatetime');
+  const endDatetimeEl = document.getElementById('taskEndDatetime');
+  const priorityEl = document.getElementById('taskPriority');
+  const categoryEl = document.getElementById('taskCategory');
+
+  if (!titleEl || !datetimeEl) return;
+
+  const title = titleEl.value;
+  const datetime = datetimeEl.value;
+  let endDatetime = endDatetimeEl ? endDatetimeEl.value : '';
+  const priority = priorityEl ? priorityEl.value : 'medium';
+  const category = categoryEl ? categoryEl.value : 'other';
+
+  if (!title || !datetime) {
+    alert('タイトルと開始日時を入力してください');
+    return;
+  }
+
+  // 終了日時が未入力の場合は自動で「開始日時 + 1時間」
+  if (!endDatetime) {
+    const startDate = new Date(datetime);
+    startDate.setHours(startDate.getHours() + 1);
+    const year = startDate.getFullYear();
+    const month = String(startDate.getMonth() + 1).padStart(2, '0');
+    const day = String(startDate.getDate()).padStart(2, '0');
+    const hours = String(startDate.getHours()).padStart(2, '0');
+    const minutes = String(startDate.getMinutes()).padStart(2, '0');
+    endDatetime = year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+  }
+
+  if (new Date(endDatetime) <= new Date(datetime)) {
+    alert('終了日時は開始日時より後の時間を指定してください');
+    return;
+  }
+
+  tasks.push({
+    id: Date.now(),
+    title,
+    datetime,
+    endDatetime,
+    priority,
+    category,
+    isStarred: false
+  });
+
+  titleEl.value = '';
+  datetimeEl.value = '';
+  if (endDatetimeEl) endDatetimeEl.value = '';
+  saveAndRender();
+}
+
+function deleteTask(id) {
+  if (confirm('この予定を削除しますか？')) {
+    tasks = tasks.filter(t => t.id !== id);
+    saveAndRender();
+  }
+}
+
+function deleteTask2(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    saveAndRender();
+}
+
+function toggleStar(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) {
+    task.isStarred = !task.isStarred;
+    saveAndRender();
+  }
+}
+
+function clearTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) {
+    task.isCleared = !task.isCleared;
+    saveAndRender();
+  }
+}
+
+/* --- タスク一覧の描画 --- */
+function renderTasks() {
+  const container = document.getElementById('taskListContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  let filtered = tasks.filter(t => {
+    if (currentFilter === 'starred') {
+      if (!t.isStarred) return false;
+    } else if (currentFilter !== 'all') {
+      if (t.category !== currentFilter) return false;
+    }
+    
+    if (selectedDateStr) {
+      if (!t.datetime.startsWith(selectedDateStr)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color:#999; padding:25px;">予定はありません</div>';
+    return;
+  }
+
+  filtered.forEach(task => {
+    const item = document.createElement('div');
+    item.className = 'task-item ' + task.priority;
+    
+    const startObj = new Date(task.datetime);
+    const endObj = task.endDatetime ? new Date(task.endDatetime) : new Date(startObj.getTime() + 3600000);
+
+    const startTimeStr = startObj.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    const endTimeStr = endObj.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = (startObj.getMonth() + 1) + '/' + startObj.getDate() + ' ' + startTimeStr + '〜' + endTimeStr;
+
+
+      item.innerHTML = '<div>' +
+        '<strong>' + task.title + '</strong>' +
+        '<div style="font-size:0.8rem; color:#666; margin-top:2px;">' +
+          dateStr + ' ・ [' + (categories[task.category] || 'その他') + ']' +
+        '</div>' +
+      '</div>' +
+      '<div class="action-btns">' +
+        '<button class="star-btn ' + (task.isStarred ? 'active' : '') + '" onclick="toggleStar(' + task.id + ')">★</button>' +
+        '<button class="delete-btn" onclick="deleteTask(' + task.id + ')">🗑️</button>' +
+         '<button class="clear-btn ' + (task.isCleared ? 'active' : '') + '" onclick="clearTask(' + task.id + ')">済</button>' +
+      '</div>';
+
+
+    container.appendChild(item);
+  });
+}
+
+/* --- フォルダタブの描画 --- */
+function renderCategoryTabs() {
+  const container = document.getElementById('categoryTabs');
+  if (!container) return;
+  container.innerHTML = '';
+
+  Object.keys(categories).forEach(key => {
+    let count = 0;
+    if (key === 'all') count = tasks.length;
+    else if (key === 'starred') count = tasks.filter(t => t.isStarred).length;
+    else count = tasks.filter(t => t.category === key).length;
+
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn ' + (currentFilter === key ? 'active' : '');
+    btn.innerHTML = categories[key] + ' <span class="badge">' + count + '</span>';
+    btn.onclick = () => {
+      currentFilter = key;
+      renderCategoryTabs();
+      renderTasks();
+    };
+    container.appendChild(btn);
+  });
+}
+
+/* --- カレンダーの描画 --- */
+function changeMonth(diff) {
+  calDate.setMonth(calDate.getMonth() + diff);
+  renderCalendar();
+}
+
 function renderCalendar() {
-    const grid = document.getElementById('calendar-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+  const grid = document.getElementById('calendarGrid');
+  const title = document.getElementById('calMonthTitle');
+  if (!grid) return;
+  grid.innerHTML = '';
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  if (title) title.innerText = year + '年 ' + (month + 1) + '月';
 
-    document.getElementById('month-display').innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; gap:15px; width:100%;">
-        <button onclick="changeMonth(-1)" style="width:auto; margin:0; padding:5px 12px;">◀</button>
-        <span style="font-size:1.3rem; font-weight:bold;">${year}年 ${month + 1}月</span>
-        <button onclick="changeMonth(1)" style="width:auto; margin:0; padding:5px 12px;">▶</button>
-    </div>
-`;
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  
+  const now = new Date();
+  const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-    ['日','月','火','水','木','金','土'].forEach(d => {
-        const el = document.createElement('div');
-        el.style.textAlign = 'center';
-        el.style.fontWeight = 'bold';
-        el.innerText = d;
-        grid.appendChild(el);
-    });
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement('div');
+    emptyCell.className = 'cal-day empty';
+    grid.appendChild(emptyCell);
+  }
 
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDate = new Date(year, month + 1, 0).getDate();
+  for (let day = 1; day <= lastDate; day++) {
+    const dayCell = document.createElement('div');
+    const monthStr = String(month + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    const fullDateStr = year + '-' + monthStr + '-' + dayStr;
 
-    for (let i = 0; i < firstDay; i++) {
-        grid.appendChild(document.createElement('div'));
+    dayCell.className = 'cal-day';
+    if (fullDateStr === todayStr) dayCell.classList.add('today');
+    if (fullDateStr === selectedDateStr) dayCell.classList.add('selected');
+
+    dayCell.innerText = day;
+
+    const hasTask = tasks.some(t => t.datetime.startsWith(fullDateStr));
+    if (hasTask) {
+      const dot = document.createElement('div');
+      dot.className = 'has-task-dot';
+      dayCell.appendChild(dot);
     }
 
-    for (let i = 1; i <= lastDate; i++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-
-        const dayEl = document.createElement('div');
-        dayEl.className = 'day' + (dateStr === selectedDate ? ' selected' : '');
-        dayEl.innerText = i;
-        dayEl.onclick = () => selectDate(dateStr);
-
-        grid.appendChild(dayEl);
-    }
-}
-
-function selectDate(date) {
-    selectedDate = date;
-    document.getElementById('selected-date-label').innerText = `${date} の詳細`;
-    renderCalendar();
-    loadTodos();
-}
-
-function addTodo() {
-    const text = document.getElementById('todo-input').value;
-    const start = document.getElementById('start-time').value;
-    const end = document.getElementById('end-time').value;
-    const priority = document.getElementById('priority-input').value;
-
-    if (!text || !start) return alert("内容と時間を入力してね");
-
-    const newTodo = {
-        id: Date.now(),
-        date: selectedDate,
-        start: start,
-        end: end,
-        text: text,
-        priority: priority,
-        completed: false
+    dayCell.onclick = () => {
+      if (selectedDateStr === fullDateStr) {
+        selectedDateStr = null;
+      } else {
+        selectedDateStr = fullDateStr;
+      }
+      renderCalendar();
+      updateFilterStatus();
+      renderTasks();
+      try { renderChart(); } catch(e){}
     };
 
-    const todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-    todos.push(newTodo);
-    localStorage.setItem('calDataV4', JSON.stringify(todos));
-    
-    document.getElementById('todo-input').value = "";
-    loadTodos();
+    grid.appendChild(dayCell);
+  }
 }
 
-function loadTodos() {
-    const list = document.getElementById('todo-list');
-    if (!list) return;
-    list.innerHTML = '';
-    const todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-    const daily = todos.filter(t => t.date === selectedDate).sort((a,b) => a.start > b.start ? 1 : -1);
-    
-    if(daily.length === 0) {
-        list.innerHTML = '<p style="color:#999; text-align:center;">予定はありません</p>';
+function updateFilterStatus() {
+  const statusEl = document.getElementById('calendarFilterStatus');
+  const textEl = document.getElementById('filterDateText');
+  const titleEl = document.getElementById('listTitleText');
+
+  if (selectedDateStr) {
+    const d = new Date(selectedDateStr);
+    if (textEl) textEl.innerText = '選択中: ' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    if (titleEl) titleEl.innerText = '📋 ' + (d.getMonth() + 1) + '月' + d.getDate() + '日の予定';
+    if (statusEl) statusEl.style.display = 'flex';
+  } else {
+    if (statusEl) statusEl.style.display = 'none';
+    if (titleEl) titleEl.innerText = '📋 予定一覧';
+  }
+}
+
+function clearDateFilter() {
+  selectedDateStr = null;
+  renderCalendar();
+  updateFilterStatus();
+  renderTasks();
+  try { renderChart(); } catch(e){}
+}
+
+/* --- 24時間円グラフの描画 --- */
+function renderChart() {
+  const canvas = document.getElementById('categoryChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const titleEl = document.getElementById('chartTitleText');
+
+  const now = new Date();
+  const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  const targetDateStr = selectedDateStr || todayStr;
+  const targetDateObj = new Date(targetDateStr);
+  
+  if (titleEl) {
+    titleEl.innerText = '📊 24時間スケジュール (' + (targetDateObj.getMonth() + 1) + '/' + targetDateObj.getDate() + ')';
+  }
+
+  const dayTasks = tasks.filter(t => t.datetime.startsWith(targetDateStr));
+  dayTasks.sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+  const labels = [];
+  const durations = [];
+  const pColors = [];
+  const cColors = [];
+
+  let currentTime = 0; // 0:00 (0分)
+
+  dayTasks.forEach(task => {
+    const startDt = new Date(task.datetime);
+    const endDt = task.endDatetime ? new Date(task.endDatetime) : new Date(startDt.getTime() + 3600000);
+
+    const startMin = startDt.getHours() * 60 + startDt.getMinutes();
+    let endMinCalc = endDt.getHours() * 60 + endDt.getMinutes();
+
+    if (endDt.getDate() !== startDt.getDate() || endMinCalc <= startMin) {
+      endMinCalc = 1440;
     }
 
-    daily.forEach(t => {
-        const item = document.createElement('div');
-        item.className = `todo-item ${t.priority} ${t.completed ? 'is-completed' : ''}`;
-        item.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleComplete(${t.id})">
-                <div>
-                    <div style="font-size:0.8rem; color:#666;">${t.start} ～ ${t.end}</div>
-                    <div style="font-weight:bold; ${t.completed ? 'text-decoration: line-through; color: #888;' : ''}">${t.text}</div>
-                </div>
-            </div>
-            <button onclick="deleteTodo(${t.id})" style="width:auto; margin:0; padding:5px; background:#ff7675; color:white;">削除</button>
-        `;
-        list.appendChild(item);
-    });
-}
+    const actualStart = Math.max(startMin, currentTime);
+    if (actualStart >= 1440) return;
 
-function deleteTodo(id) {
-    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-    todos = todos.filter(t => t.id !== id);
-    localStorage.setItem('calDataV4', JSON.stringify(todos));
-    loadTodos();
-}
-
-function toggleComplete(id) {
-    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-        todo.completed = !todo.completed;
-        localStorage.setItem('calDataV4', JSON.stringify(todos));
-        loadTodos();
+    // 空き時間
+    if (actualStart > currentTime) {
+      labels.push('空き時間');
+      durations.push(actualStart - currentTime);
+      pColors.push('#f0f3f8');
+      cColors.push('#f0f3f8');
+      currentTime = actualStart;
     }
-}
 
-function openBulkModal() { document.getElementById('bulk-modal').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; }
-function closeModals() { document.getElementById('bulk-modal').style.display = 'none'; document.getElementById('overlay').style.display = 'none'; }
+    // 予定時間
+    const taskEndMin = Math.min(1440, endMinCalc);
+    const taskDuration = Math.max(0, taskEndMin - currentTime);
 
-function executeBulkAdd() {
-    const text = document.getElementById('todo-input').value;
-    const start = document.getElementById('start-time').value;
-    const end = document.getElementById('end-time').value;
-    const checkboxes = document.querySelectorAll('#bulk-modal input[type="checkbox"]:checked');
-    const targetDays = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    if (taskDuration > 0) {
+      const startTimeStr = startDt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      const endTimeStr = endDt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      labels.push(task.title + ' (' + startTimeStr + '〜' + endTimeStr + ')');
+      durations.push(taskDuration);
+      pColors.push(priorityColors[task.priority] || '#ccc');
+      cColors.push(categoryColors[task.category] || '#ccc');
+      currentTime = taskEndMin;
+    }
+  });
 
-    if (!text || !start || targetDays.length === 0) return alert("内容、時間、曜日を選択してね");
+  // 残り時間の補填
+  if (currentTime < 1440) {
+    labels.push('空き時間');
+    durations.push(1440 - currentTime);
+    pColors.push('#f0f3f8');
+    cColors.push('#f0f3f8');
+  }
 
-    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-    const now = new Date();
-    const lastDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (typeof Chart === 'undefined') {
+    console.warn('Chart.jsライブラリが読み込まれていません。');
+    return;
+  }
 
-    for (let i = 1; i <= lastDate; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth(), i);
-        if (targetDays.includes(d.getDay())) {
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            todos.push({ id: Date.now() + i, date: dateStr, start, end, text, priority: 'normal', completed: false });
+  if (categoryChart) {
+    categoryChart.destroy();
+  }
+
+  // 3時間ごとの目盛り線・文字プラグイン
+  const clockTicksPlugin = {
+    id: 'clockTicks',
+    afterDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data || !meta.data[0]) return;
+
+      const x0 = (chartArea.left + chartArea.right) / 2;
+      const y0 = (chartArea.top + chartArea.bottom) / 2;
+      const outerRadius = meta.data[0].outerRadius;
+
+      if (!outerRadius) return;
+
+      ctx.save();
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.strokeStyle = '#a0a0a0';
+      ctx.lineWidth = 1.5;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const timeLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+
+      for (let i = 0; i < 8; i++) {
+        const hour = i * 3;
+        const angle = (hour / 24) * 2 * Math.PI - Math.PI / 2;
+
+        const innerR = outerRadius;
+        const outerR = outerRadius + 5;
+        const textR = outerRadius + 18;
+
+        ctx.beginPath();
+        ctx.moveTo(x0 + innerR * Math.cos(angle), y0 + innerR * Math.sin(angle));
+        ctx.lineTo(x0 + outerR * Math.cos(angle), y0 + outerR * Math.sin(angle));
+        ctx.stroke();
+
+        ctx.fillText(timeLabels[i], x0 + textR * Math.cos(angle), y0 + textR * Math.sin(angle));
+      }
+
+      ctx.restore();
+    }
+  };
+
+  categoryChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '重要度 (外側)',
+          data: durations,
+          backgroundColor: pColors,
+          borderWidth: 1,
+          borderColor: '#ffffff',
+          weight: 1
+        },
+        {
+          label: 'カテゴリ (内側)',
+          data: durations,
+          backgroundColor: cColors,
+          borderWidth: 1,
+          borderColor: '#ffffff',
+          weight: 0.8
         }
-    }
-    localStorage.setItem('calDataV4', JSON.stringify(todos));
-    closeModals();
-    loadTodos();
+      ]
+    },
+    options: {
+      responsive: true,
+      rotation: 0, // 00:00が真上（12時）
+      circumference: 360,
+      layout: {
+        padding: 22
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.chart.data.labels[context.dataIndex];
+              const minutes = context.parsed;
+              const hours = (minutes / 60).toFixed(1);
+              return context.dataset.label + ': ' + label + ' (' + hours + '時間)';
+            }
+          }
+        }
+      }
+    },
+    plugins: [clockTicksPlugin]
+  });
 }
 
-function deleteCheckedTodos() {
-    let todos = JSON.parse(localStorage.getItem('calDataV4')) || [];
-
-    // 今表示している日の、チェック済み予定IDを取得
-    const checkedIds = todos
-        .filter(t => t.date === selectedDate && t.completed)
-        .map(t => t.id);
-
-    // チェック済み以外を残す
-    todos = todos.filter(t => !checkedIds.includes(t.id));
-
-    localStorage.setItem('calDataV4', JSON.stringify(todos));
-
-    loadTodos();
+// ページの読み込み完了時に安全に初期描画を実行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', saveAndRender);
+} else {
+  saveAndRender();
 }
 
-
-function changeMonth(diff) {
-    currentDate.setMonth(currentDate.getMonth() + diff);
-    renderCalendar();
-}

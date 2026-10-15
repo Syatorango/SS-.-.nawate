@@ -1,58 +1,120 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>SS情報班．予定管理アプリ</title>
-    <link rel="stylesheet" href="style.css"> </head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SS情報班 予定管理ダッシュボード</title>
+  <link rel="manifest" href="manifest.json">
+  <!-- 円グラフ描画用ライブラリ（Chart.js） -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CSSファイルの読み込み -->
+  <link rel="stylesheet" href="style.css">
+</head>
 <body>
-    <div class="overlay" id="overlay" onclick="closeModals()"></div>
 
-    <div class="calendar-container card">
-        <h2 id="month-display">カレンダー</h2>
-        <div class="calendar-grid" id="calendar-grid"></div>
+  <header>SS情報班 予定管理ダッシュボード</header>
+
+  <div class="dashboard-container">
+    
+    <!-- ================= 左パネル（入力フォーム ＆ カレンダー） ================= -->
+    <div class="left-panel">
+      
+      <!-- 予定追加フォーム -->
+      <div class="card">
+        <h3 class="card-title">📝 新しい予定を追加</h3>
+        <div class="form-group">
+          <label>予定のタイトル</label>
+          <input type="text" id="taskTitle" placeholder="例: レポート提出">
+        </div>
+<div class="form-row">
+          <div class="form-group">
+            <label>開始日時</label>
+            <input type="datetime-local" id="taskDatetime">
+          </div>
+          <div class="form-group">
+            <label>終了日時</label>
+            <input type="datetime-local" id="taskEndDatetime">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>重要度</label>
+            <select id="taskPriority">
+              <option value="high">高 (赤)</option>
+              <option value="medium" selected>中 (黄)</option>
+              <option value="low">低 (緑)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>フォルダ</label>
+            <select id="taskCategory">
+              <option value="work">仕事</option>
+              <option value="house">家事</option>
+              <option value="hobby">趣味</option>
+              <option value="study">勉強</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addTask()">予定を追加する</button>
+      </div>
+
+      <!-- カレンダー -->
+      <div class="card">
+        <div class="cal-header-ctrl">
+          <button onclick="changeMonth(-1)">◀ 前月</button>
+          <h3 id="calMonthTitle" class="cal-title"></h3>
+          <button onclick="changeMonth(1)">次月 ▶</button>
+        </div>
+        <div class="calendar-header">
+          <span class="sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="sat">土</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        
+        <!-- カレンダー日付選択時のフィルター解除表示 -->
+        <div id="calendarFilterStatus" class="filter-status" style="display: none;">
+          <span id="filterDateText"></span>
+          <button class="btn-clear-filter" onclick="clearDateFilter()">すべての予定を表示</button>
+        </div>
+      </div>
+
     </div>
 
-    <div class="side-panel">
-        <div class="card input-card">
-            <h2 id="selected-date-label">日付を選択</h2>
-            <div class="time-inputs">
-                <div><span class="label">開始</span><input type="time" id="start-time" value="09:00"></div>
-                <div><span class="label">終了</span><input type="time" id="end-time" value="10:00"></div>
-            </div>
-            <span class="label">予定の内容</span>
-           <span class="label">重要度</span>
-<select id="priority-input">
-    <option value="normal">ふつう</option>
-    <option value="high">重要（赤）</option>
-    <option value="low">後回し（青）</option>
-</select>
-            <input type="text" id="todo-input" placeholder="例：プログラミング">
-            <button class="btn-main" onclick="addTodo()">この日だけ保存</button>
-            <button class="btn-bulk" onclick="openBulkModal()"> ✨ 複数日に一括登録 ✨</button>
+    <!-- ================= 右パネル（円グラフ ＆ 予定リスト） ================= -->
+    <div class="right-panel">
+      
+      <!-- 円グラフ（カテゴリ別内訳） -->
+      <div class="card">
+        <h3 class="card-title" id="chartTitleText">📊 24時間スケジュール（今日）</h3>
+        <div class="chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 予定リスト（表示方式変更機能付き） -->
+      <div class="card">
+        <div class="list-header-ctrl">
+          <h3 class="card-title" id="listTitleText">📋 予定一覧</h3>
+          
+          <!-- 表示方式切り替えボタン -->
+          <!-- 一括削除ボタン -->
+           <button class="mode-btn"  id="DeleteButton" type="button">★の削除</button>
+           <button class="mode-btn"  id="ClearButton" type="button">完了済予定の削除</button>
+
         </div>
 
-        <div class="card list-card">
-            <h2>本日のタイムライン</h2>
-            <div id="todo-list"></div>
-            <button class="btn-cancel" onclick="deleteCheckedTodos()">
-    ✔ 完了した予定をまとめて削除
-</button>
-        </div>
+        <!-- フォルダ別インデックス -->
+        <div class="category-tabs" id="categoryTabs"></div>
+
+        <!-- 予定一覧描画エリア -->
+        <div id="taskListContainer" class="view-card"></div>
+      </div>
+
     </div>
 
-    <div id="bulk-modal" class="modal">
-        <h3>繰り返し設定</h3>
-        <div class="day-checkboxes">
-            <label><input type="checkbox" value="1">月</label><label><input type="checkbox" value="2">火</label>
-            <label><input type="checkbox" value="3">水</label><label><input type="checkbox" value="4">木</label>
-            <label><input type="checkbox" value="5">金</label><label><input type="checkbox" value="6">土</label>
-            <label><input type="checkbox" value="0">日</label>
-        </div>
-        <button class="btn-bulk" onclick="executeBulkAdd()">一括登録実行</button>
-        <button class="btn-cancel" onclick="closeModals()">キャンセル</button>
-    </div>
+  </div>
 
- 
-
-    <script src="script.js"></script> </body>
+  <!-- JavaScriptの読み込み -->
+  <script src="script.js"></script>
+</body>
 </html>

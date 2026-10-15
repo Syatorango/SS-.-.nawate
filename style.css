@@ -1,129 +1,305 @@
-:root { --primary: #3498db; --success: #2ecc71; --bg: #f8f9fa; }
-body { font-family: sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; gap: 20px; }
-.card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-.calendar-container { width: 350px; }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-.day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%; font-size: 0.9rem; }
-.day.selected { background: var(--primary); color: white; }
-.side-panel { width: 400px; display: flex; flex-direction: column; gap: 20px; }
-.time-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
-.label { font-size: 0.8rem; color: #7f8c8d; }
-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-button { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-.btn-main { background: var(--primary); color: white; }
-.btn-bulk { background: var(--success); color: white; }
-.btn-cancel { background: #ccc; }
-.todo-item { border-left: 5px solid var(--primary); background: #f9f9f9; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; border-radius: 5px; }
-.modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; z-index: 100; border-radius: 15px; width: 300px; }
-.overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; }
-
-.todo-item.high { border-left: 8px solid #ff4d4d; background: #fff5f5; }
-.todo-item.low { border-left: 8px solid #3498db; background: #f0f7ff; }
-
-.todo-item.is-completed { opacity: 0.6; border-left-color: #ccc; }
-
-.day-checkboxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 15px 0;
+:root {
+  --bg-color: #f0f3f8;
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --primary-color: #3498db;
+  --high-priority: #e74c3c;
+  --med-priority: #f39c12;
+  --low-priority: #2ecc71;
 }
 
-.day-checkboxes label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 1rem;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0 0 30px 0;
+}
+
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+/* ダッシュボード全体の2列グリッド構造 */
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* スマホなど画面が狭い場合は縦並び（1列）に自動変換 */
+@media (max-width: 900px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.left-panel, .right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* カード共通 */
+.card {
+  background: var(--card-bg);
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.card-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  font-size: 1.05rem;
+}
+
+/* フォーム装飾 */
+.form-group { margin-bottom: 12px; }
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+.form-row .form-group { flex: 1; }
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+}
+
+button.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 5px;
+}
+button.btn-primary:hover { opacity: 0.9; }
+
+/* カレンダー */
+.cal-header-ctrl {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+.cal-header-ctrl button {
+  width: auto; padding: 5px 12px; background: #e0e6ed; border: none; border-radius: 6px; cursor: pointer;
+}
+.cal-title { margin: 0; color: #2c3e50; font-size: 1.05rem; }
+
+.calendar-header {
+  display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.85rem; color: #7f8c8d; margin-bottom: 6px;
+}
+.calendar-header .sun { color: #e74c3c; }
+.calendar-header .sat { color: #3498db; }
+
+.calendar-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;
+}
+.cal-day {
+  padding: 8px 0; min-height: 38px; border-radius: 8px; background: #f8f9fa; font-size: 0.85rem; border: 1px solid #edf2f7; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.cal-day.empty { background: transparent; border: none; cursor: default; }
+.cal-day.selected { border: 2px solid var(--primary-color); background: #e8f4fc; font-weight: bold; }
+.cal-day.today { background: #ffeaa7; }
+.has-task-dot { width: 5px; height: 5px; background-color: var(--primary-color); border-radius: 50%; margin-top: 2px; }
+
+.filter-status {
+  margin-top: 12px;
+  padding: 8px;
+  background: #e8f4fc;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.btn-clear-filter {
+  width: auto;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 円グラフコンテナ */
+.chart-container {
+  position: relative;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* 表示方式切替コントロール */
+.list-header-ctrl {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.view-mode-selector {
+  display: flex;
+  background: #e0e6ed;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.mode-btn {
+    width: 200px;
+    height: 50px;
+    font-size: 18px;
+    color: white;
+    background-color: #555555;
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
 }
 
-.day-checkboxes input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-}
-
-/* ===== スマホ対応 ===== */
-@media screen and (max-width: 768px) {
-
-    body {
-        flex-direction: column;
-        align-items: center;
-        padding: 10px;
-        gap: 15px;
-    }
-
-    .calendar-container,
-    .side-panel {
-        width: 100%;
-        max-width: 500px;
-    }
-
-    .card {
-        padding: 15px;
-        border-radius: 12px;
-    }
-
-    .calendar-grid {
-        gap: 3px;
-    }
-
-    .day {
-        font-size: 0.85rem;
-    }
-
-    .time-inputs {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    input,
-    select,
-    button {
-        font-size: 16px; /* iPhoneのズーム防止 */
-    }
-
-    .todo-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .todo-item button {
-        width: 100%;
-    }
-
-    .modal {
-        width: 90%;
-        max-width: 350px;
-    }
-
-    .day-checkboxes {
-        justify-content: center;
-    }
-}
-
-/* 重複がある日のスタイル（日付の下に小さな赤いドットを表示します） */
-.day.has-overlap {
-    background-color: #ffeaa7; /* 薄い警告色 */
-    color: #d63031; /* 文字を濃い赤に */
-    border: 2px dashed #ff7675; /* 点線の枠線 */
-    font-weight: bold;
-}
-.day.has-overlap::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background-color: #ff7675; /* 警告の赤ドット */
-    border-radius: 50%;
-}
-
-/* 選択されている時はドットを白にして見やすくします */
-.day.selected.has-overlap {
-    background-color: #ff7675; /* 選択時はハッキリした赤に */
+.mode-btn.active {
+    width: 120px;
+    height: 50px;
+    font-size: 18px;
     color: white;
-    border: 2px solid #d63031;
+    background-color: #227963;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 }
+
+/* フォルダタブ */
+.category-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  white-space: nowrap;
+}
+
+.tab-btn {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  border-radius: 16px;
+  background: #e0e6ed;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #444;
+}
+
+.tab-btn.active {
+  background: #2c3e50;
+  color: white;
+}
+
+.badge {
+  background: rgba(0,0,0,0.15);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  margin-left: 4px;
+}
+
+/* ボタン関係 */
+.action-btns { display: flex; align-items: center; gap: 8px; }
+.star-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; color: #ccc; }
+.star-btn.active { color: #f1c40f; }
+.clear-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0; width: auto; color: #ccc; }
+.clear-btn.active { color: #f1c40f; }
+.delete-btn { background: none; border: none; font-size: 1rem; cursor: pointer; padding: 0; width: auto; color: #95a5a6; }
+
+/* ----------------------------------------------------
+   表示モード別のスタイル切替
+---------------------------------------------------- */
+
+/* 1. カード表示 */
+.view-card .task-item {
+  background: var(--card-bg);
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #edf2f7;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 6px solid #ccc;
+}
+.view-card .task-item.high { border-left-color: var(--high-priority); }
+.view-card .task-item.medium { border-left-color: var(--med-priority); }
+.view-card .task-item.low { border-left-color: var(--low-priority); }
+
+/* 2. リスト（コンパクト）表示 */
+.view-compact .task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.88rem;
+}
+.view-compact .task-item:hover { background: #f8f9fa; }
+.compact-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.compact-badge.high { background: var(--high-priority); }
+.compact-badge.medium { background: var(--med-priority); }
+.compact-badge.low { background: var(--low-priority); }
+
+/* 3. タイムライン表示 */
+.view-timeline {
+  border-left: 2px solid #3498db;
+  padding-left: 15px;
+  margin-left: 10px;
+}
+.view-timeline .task-item {
+  position: relative;
+  margin-bottom: 15px;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 4px solid #ccc;
+}
+.view-timeline .task-item::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 15px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary-color);
+}
+.view-timeline .task-item.high { border-left-color: var(--high-priority); }
+.view-timeline .task-item.medium { border-left-color: var(--med-priority); }
+.view-timeline .task-item.low { border-left-color: var(--low-priority); }
