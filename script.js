@@ -487,7 +487,7 @@ function renderChart() {
       rotation: 0, // 00:00が真上（12時）
       circumference: 360,
       layout: {
-        padding: 22
+        padding: 35
       },
       plugins: {
         legend: { display: false },

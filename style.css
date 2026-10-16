@@ -149,7 +149,8 @@ button.btn-primary:hover { opacity: 0.9; }
 /* 円グラフコンテナ */
 .chart-container {
   position: relative;
-  max-width: 320px;
+  width: 400px;
+  height: 320px;
   margin: 0 auto;
 }
 
