@@ -113,6 +113,68 @@
     </div>
 
   </div>
+  <!-- 週別時間割メモ -->
+<div class="card timetable-card">
+  <h3 class="card-title">📝 週別時間割メモ</h3>
+
+<div class="timetable-selectors">
+
+  <!-- 週選択 -->
+  <div id="timetableWeekSelector" class="timetable-weeks"></div>
+
+  <!-- 曜日選択 -->
+  <div id="timetableDaySelector" class="timetable-days"></div>
+
+  <!-- 時限選択 -->
+  <div id="timetablePeriodSelector" class="timetable-periods"></div>
+
+  <!-- メモ編集（先に表示） -->
+  <div class="timetable-editor">
+    <h4 id="timetableSlotTitle">A週・月曜日・1時間目</h4>
+
+    <label for="timetableMemo">自由記入メモ</label>
+
+    <textarea
+      id="timetableMemo"
+      class="timetable-memo"
+      rows="5"
+      placeholder="ここに自由に記録してください..."
+    ></textarea>
+
+    <div id="timetableSaveStatus" class="timetable-save-status">
+      自動保存されます
+    </div>
+  </div>
+
+  <!-- 時間割呼び出し（後に表示） -->
+<!-- その週の時間割登録 -->
+<div class="weekly-schedule-panel">
+
+  <h4>📅 その週の時間割</h4>
+
+  <p class="weekly-schedule-description">
+    曜日ごとに時間割の参照先を登録してください。
+    例：A月1 A月2
+  </p>
+
+  <div id="weeklyScheduleRows"></div>
+
+  <button
+    type="button"
+    id="saveWeeklyScheduleButton"
+    class="weekly-schedule-save-btn">
+    時間割を登録
+  </button>
+
+  <div id="weeklyScheduleStatus"></div>
+
+  <div id="weeklyScheduleDisplay"></div>
+
+</div>
+  </div>
+
+</div>
+</div>
 
   <!-- JavaScriptの読み込み -->
   <script src="script.js"></script>

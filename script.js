@@ -514,3 +514,621 @@ if (document.readyState === 'loading') {
   saveAndRender();
 }
 
+/* =====================================
+   週別時間割メモシステム
+===================================== */
+
+// 基本設定
+const timetableWeeks = ["A", "B", "C", "D"];
+const timetableDays = ["月", "火", "水", "木", "金", "土", "日"];
+const timetablePeriods = [1, 2, 3, 4, 5, 6, 7, 8];
+
+// 選択中の時間割
+let selectedTimetableWeek = "A";
+let selectedTimetableDay = "月";
+let selectedTimetablePeriod = 1;
+
+
+// 空の時間割データを作成
+function createEmptyTimetable() {
+
+  const data = {};
+
+  timetableWeeks.forEach(week => {
+
+    data[week] = {};
+
+    timetableDays.forEach(day => {
+
+      data[week][day] = {};
+
+      timetablePeriods.forEach(period => {
+
+        data[week][day][period] = "";
+
+      });
+
+    });
+
+  });
+
+  return data;
+}
+
+
+// 保存済みデータを読み込む
+function loadTimetableData() {
+
+  const emptyData = createEmptyTimetable();
+
+  try {
+
+    const savedData = JSON.parse(
+      localStorage.getItem("my_timetable")
+    );
+
+    if (!savedData || typeof savedData !== "object") {
+      return emptyData;
+    }
+
+    timetableWeeks.forEach(week => {
+
+      timetableDays.forEach(day => {
+
+        timetablePeriods.forEach(period => {
+
+          const value = savedData[week]?.[day]?.[period];
+
+          if (typeof value === "string") {
+            emptyData[week][day][period] = value;
+          }
+
+        });
+
+      });
+
+    });
+
+  } catch (e) {
+
+    console.error("時間割データ読み込みエラー:", e);
+
+  }
+
+  return emptyData;
+}
+
+
+// 時間割データ
+const timetableData = loadTimetableData();
+
+
+// 時間割全体を描画
+function renderTimetableMemo() {
+
+  renderTimetableWeekButtons();
+  renderTimetableDayButtons();
+  renderTimetablePeriodButtons();
+  loadSelectedTimetableMemo();
+
+}
+
+
+// 週選択ボタン
+function renderTimetableWeekButtons() {
+
+  const container = document.getElementById(
+    "timetableWeekSelector"
+  );
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  timetableWeeks.forEach(week => {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "timetable-select-btn";
+
+    if (selectedTimetableWeek === week) {
+      button.classList.add("active");
+    }
+
+    button.textContent = week + "週";
+
+    button.onclick = () => {
+
+      selectedTimetableWeek = week;
+
+      renderTimetableMemo();
+
+    };
+
+    container.appendChild(button);
+
+  });
+
+}
+
+
+// 曜日選択ボタン
+function renderTimetableDayButtons() {
+
+  const container = document.getElementById(
+    "timetableDaySelector"
+  );
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  timetableDays.forEach(day => {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "timetable-select-btn";
+
+    if (selectedTimetableDay === day) {
+      button.classList.add("active");
+    }
+
+    button.textContent = day;
+
+    button.onclick = () => {
+
+      selectedTimetableDay = day;
+
+      renderTimetableMemo();
+
+    };
+
+    container.appendChild(button);
+
+  });
+
+}
+
+
+// 時限選択ボタン
+function renderTimetablePeriodButtons() {
+
+  const container = document.getElementById(
+    "timetablePeriodSelector"
+  );
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  timetablePeriods.forEach(period => {
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "timetable-select-btn";
+
+    if (selectedTimetablePeriod === period) {
+      button.classList.add("active");
+    }
+
+    button.textContent = period + "時間目";
+
+    button.onclick = () => {
+
+      selectedTimetablePeriod = period;
+
+      renderTimetableMemo();
+
+    };
+
+    container.appendChild(button);
+
+  });
+
+}
+
+
+// 選択した時間割の情報を呼び出す
+function loadSelectedTimetableMemo() {
+
+  const memo = document.getElementById("timetableMemo");
+  const title = document.getElementById("timetableSlotTitle");
+  const status = document.getElementById("timetableSaveStatus");
+
+  if (!memo) return;
+
+  const week = selectedTimetableWeek;
+  const day = selectedTimetableDay;
+  const period = selectedTimetablePeriod;
+
+  // 保存情報の呼び出し
+  memo.value = timetableData[week][day][period];
+
+  // 選択中の枠を表示
+  if (title) {
+
+    title.textContent =
+      week + "週・" + day + "曜日・" +
+      period + "時間目（" +
+      week + day + period + "）";
+
+  }
+
+  if (status) {
+    status.textContent = "自動保存されます";
+  }
+
+}
+
+
+// メモを保存する
+function saveTimetableMemo() {
+
+  const memo = document.getElementById("timetableMemo");
+  const status = document.getElementById("timetableSaveStatus");
+
+  if (!memo) return;
+
+  const week = selectedTimetableWeek;
+  const day = selectedTimetableDay;
+  const period = selectedTimetablePeriod;
+
+  // 選択中の枠に記録
+  timetableData[week][day][period] = memo.value;
+
+  try {
+
+    localStorage.setItem(
+      "my_timetable",
+      JSON.stringify(timetableData)
+    );
+
+    if (status) {
+      status.textContent = "保存しました";
+    }
+
+  } catch (e) {
+
+    console.error("時間割保存エラー:", e);
+
+    if (status) {
+      status.textContent = "保存できませんでした";
+    }
+
+  }
+
+}
+
+
+// 初期化
+function initializeTimetableMemo() {
+
+  renderTimetableMemo();
+
+  const memo = document.getElementById("timetableMemo");
+
+  if (memo) {
+
+    memo.addEventListener("input", saveTimetableMemo);
+
+  }
+
+}
+
+
+// ページ読み込み時に初期化
+if (document.readyState === "loading") {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeTimetableMemo
+  );
+
+} else {
+
+  initializeTimetableMemo();
+
+}
+
+
+
+
+/* =====================================
+   時間割タブの開閉機能
+===================================== */
+
+function initializeTimetableToggle() {
+
+  const card = document.querySelector(".timetable-card");
+
+  if (!card || card.dataset.toggleInitialized) return;
+
+  const title = card.querySelector(".card-title");
+  const selectors = card.querySelector(".timetable-selectors");
+  const editor = card.querySelector(".timetable-editor");
+
+  if (!title || !selectors || !editor) return;
+
+  // タイトル用ヘッダー
+  const header = document.createElement("div");
+  header.className = "timetable-card-header";
+
+  title.parentNode.insertBefore(header, title);
+  header.appendChild(title);
+
+  // 開閉ボタン
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "timetable-toggle-btn";
+
+  header.appendChild(button);
+
+  // 開閉処理
+  function setTimetableOpen(isOpen) {
+
+    selectors.hidden = !isOpen;
+    editor.hidden = !isOpen;
+
+    button.textContent = isOpen ? "閉じる ▲" : "開く ▼";
+
+    button.setAttribute("aria-expanded", String(isOpen));
+
+  }
+
+  button.addEventListener("click", function () {
+
+    const isOpen = selectors.hidden;
+
+    setTimetableOpen(isOpen);
+
+  });
+
+  setTimetableOpen(true);
+
+  card.dataset.toggleInitialized = "true";
+}
+
+// 初期化
+if (document.readyState === "loading") {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeTimetableToggle
+  );
+
+} else {
+
+  initializeTimetableToggle();
+
+}
+
+/* =====================================
+   その週の時間割登録・メモ呼び出し
+===================================== */
+
+// 保存用データ
+const WEEKLY_SCHEDULE_KEY = "my_weekly_schedule";
+
+// 曜日ごとの時間割データ
+let weeklyScheduleData = loadWeeklySchedule();
+
+
+// データ読み込み
+function loadWeeklySchedule() {
+  const data = {};
+
+  timetableDays.forEach(day => {
+    data[day] = [];
+  });
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(WEEKLY_SCHEDULE_KEY));
+
+    if (!saved || typeof saved !== "object") return data;
+
+    timetableDays.forEach(day => {
+      if (!Array.isArray(saved[day])) return;
+
+      data[day] = saved[day].map(item => {
+        const slot = typeof item === "string"
+          ? item
+          : item?.slot;
+
+        return typeof slot === "string" &&
+          /^[ABCD][月火水木金土日][1-8]$/.test(slot)
+          ? slot
+          : null;
+
+      }).filter(Boolean);
+    });
+
+  } catch (e) {
+    console.error("時間割読み込みエラー:", e);
+  }
+
+  return data;
+}
+
+// 時間割登録欄の生成
+function renderWeeklyScheduleRows() {
+  const container = document.getElementById("weeklyScheduleRows");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  timetableDays.forEach(day => {
+    const row = document.createElement("div");
+    row.className = "weekly-schedule-row";
+
+    const label = document.createElement("label");
+    label.textContent = day + "曜";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "weekly-schedule-input";
+    input.id = "weeklyScheduleInput_" + day;
+
+    input.placeholder = "例：A月1 A月2 B火1";
+    input.value = weeklyScheduleData[day].join(" ");
+
+    row.appendChild(label);
+    row.appendChild(input);
+
+    container.appendChild(row);
+  });
+}
+
+// 時間割の登録
+function saveWeeklySchedule() {
+  const newData = {};
+
+  for (const day of timetableDays) {
+    const input = document.getElementById("weeklyScheduleInput_" + day);
+    if (!input) return;
+
+    const slots = input.value
+      .trim()
+      .split(/[\s,、，]+/)
+      .filter(Boolean);
+
+    for (const slot of slots) {
+      if (!/^[ABCD][月火水木金土日][1-8]$/.test(slot)) {
+        document.getElementById("weeklyScheduleStatus").textContent =
+          "入力形式が違います。例：A月1 A月2";
+        return;
+      }
+    }
+
+    newData[day] = slots;
+  }
+
+  try {
+    localStorage.setItem(
+      WEEKLY_SCHEDULE_KEY,
+      JSON.stringify(newData)
+    );
+
+    weeklyScheduleData = newData;
+
+    renderWeeklyScheduleDisplay();
+
+    document.getElementById("weeklyScheduleStatus").textContent =
+      "時間割を保存しました";
+
+  } catch (e) {
+    console.error("時間割保存エラー:", e);
+
+    document.getElementById("weeklyScheduleStatus").textContent =
+      "保存に失敗しました";
+  }
+}
+// 登録済み時間割を表示
+function renderWeeklyScheduleDisplay() {
+  const container = document.getElementById("weeklyScheduleDisplay");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  timetableDays.forEach(day => {
+    const row = document.createElement("div");
+    row.className = "weekly-schedule-display-row";
+
+    const label = document.createElement("span");
+    label.className = "weekly-schedule-display-label";
+    label.textContent = day + "曜日";
+
+    const slotsContainer = document.createElement("div");
+    slotsContainer.className = "weekly-schedule-slots";
+
+    const slots = weeklyScheduleData[day] || [];
+
+    if (slots.length === 0) {
+      const empty = document.createElement("span");
+      empty.className = "weekly-schedule-empty";
+      empty.textContent = "未登録";
+      slotsContainer.appendChild(empty);
+    }
+
+    slots.forEach(slot => {
+      const match = slot.match(
+        /^([ABCD])([月火水木金土日])([1-8])$/
+      );
+
+      if (!match) return;
+
+      const week = match[1];
+      const targetDay = match[2];
+      const period = Number(match[3]);
+
+      // 指定された時間割のメモを取得
+      const memo = timetableData[week][targetDay][period];
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "weekly-schedule-slot-btn";
+
+      // A月1ではなく、メモの内容を表示
+      button.textContent = memo.trim() || "未入力";
+
+      button.onclick = () => {
+        selectedTimetableWeek = week;
+        selectedTimetableDay = targetDay;
+        selectedTimetablePeriod = period;
+
+        renderTimetableMemo();
+
+        document.getElementById("timetableMemo").scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      };
+
+      slotsContainer.appendChild(button);
+    });
+
+    row.appendChild(label);
+    row.appendChild(slotsContainer);
+
+    container.appendChild(row);
+  });
+}
+// 初期化
+function initializeWeeklySchedule() {
+
+  renderWeeklyScheduleRows();
+
+  renderWeeklyScheduleDisplay();
+
+  const saveButton = document.getElementById(
+    "saveWeeklyScheduleButton"
+  );
+
+  if (saveButton) {
+
+    saveButton.addEventListener(
+      "click",
+      saveWeeklySchedule
+    );
+
+  }
+
+}
+
+
+// ページ読み込み時
+if (document.readyState === "loading") {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeWeeklySchedule
+  );
+
+} else {
+
+  initializeWeeklySchedule();
+
+}

@@ -304,3 +304,403 @@ button.btn-primary:hover { opacity: 0.9; }
 .view-timeline .task-item.high { border-left-color: var(--high-priority); }
 .view-timeline .task-item.medium { border-left-color: var(--med-priority); }
 .view-timeline .task-item.low { border-left-color: var(--low-priority); }
+
+
+
+/* =====================================
+ ここから追加分
+===================================== */
+
+/* 全画面共通 */
+* {
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.left-panel,
+.right-panel,
+.card {
+  min-width: 0;
+}
+
+/* 円グラフの画面サイズ対応 */
+.chart-container {
+  width: 100%;
+  max-width: 400px;
+  height: 320px;
+}
+
+/* PC */
+@media (min-width: 901px) {
+
+  .dashboard-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+/* タブレット */
+@media (max-width: 900px) {
+
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    max-width: 400px;
+    height: 300px;
+  }
+
+}
+
+/* スマートフォン */
+@media (max-width: 600px) {
+
+  /* 全体 */
+  body {
+    padding-bottom: 15px;
+  }
+
+  header {
+    font-size: 1rem;
+    padding: 14px 8px;
+  }
+
+  .dashboard-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 0 10px;
+  }
+
+  /* カード */
+  .card {
+    padding: 13px;
+    border-radius: 10px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  /* 入力フォーム */
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-group {
+    width: 100%;
+  }
+
+  input,
+  select {
+    font-size: 16px;
+  }
+
+  /* カレンダー */
+  .cal-day {
+    min-height: 40px;
+    padding: 5px 0;
+  }
+
+  .cal-header-ctrl button {
+    font-size: 0.75rem;
+    padding: 7px 8px;
+  }
+
+  .cal-title {
+    font-size: 0.95rem;
+  }
+
+  /* 円グラフ */
+  .chart-container {
+    width: 100%;
+    height: 260px;
+  }
+
+  /* 予定一覧のヘッダー */
+  .list-header-ctrl {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .list-header-ctrl .card-title {
+    margin-bottom: 5px;
+  }
+
+  /* 操作ボタン */
+  .mode-btn,
+  .mode-btn.active {
+    width: 100%;
+    height: 42px;
+    font-size: 14px;
+  }
+
+  /* 予定カード */
+  .view-card .task-item {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .action-btns {
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  /* フォルダタブ */
+  .category-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+}
+/* =====================================
+   週別時間割メモ
+===================================== */
+
+.timetable-selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timetable-weeks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.timetable-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.timetable-periods {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.timetable-select-btn {
+  width: 100%;
+  padding: 10px 3px;
+  background: #e0e6ed;
+  color: #333;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.timetable-select-btn.active {
+  background: #3498db;
+  color: white;
+  font-weight: bold;
+}
+
+.timetable-editor {
+  margin-top: 18px;
+}
+
+.timetable-editor h4 {
+  margin: 0 0 12px;
+  color: #2c3e50;
+}
+
+.timetable-memo {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  margin-top: 6px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.timetable-save-status {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #2ecc71;
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .timetable-selectors {
+    gap: 10px;
+  }
+
+  .timetable-select-btn {
+    padding: 10px 2px;
+    font-size: 0.8rem;
+  }
+
+  .timetable-days {
+    gap: 3px;
+  }
+
+  .timetable-memo {
+    min-height: 120px;
+  }
+}
+
+
+
+
+
+/* 時間割タイトルと開閉ボタン */
+.timetable-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.timetable-card-header .card-title {
+  margin: 0;
+}
+
+.timetable-toggle-btn {
+  width: auto;
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  background: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.timetable-toggle-btn:hover {
+  background: #3498db;
+}
+
+.timetable-card [hidden] {
+  display: none !important;
+}
+
+/* =====================================
+   その週の時間割
+===================================== */
+
+.weekly-schedule-panel {
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+  margin-top: 10px;
+}
+
+.weekly-schedule-description {
+  font-size: 0.85rem;
+  color: #777;
+  line-height: 1.6;
+}
+
+.weekly-schedule-row {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+.weekly-schedule-row label {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.weekly-schedule-input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  font-size: 0.9rem;
+}
+
+.weekly-schedule-save-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+#weeklyScheduleStatus {
+  font-size: 0.8rem;
+  color: #2ecc71;
+  margin-top: 7px;
+}
+
+#weeklyScheduleDisplay {
+  margin-top: 15px;
+}
+
+.weekly-schedule-display-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.weekly-schedule-display-label {
+  width: 55px;
+  flex-shrink: 0;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.weekly-schedule-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.weekly-schedule-slot-btn {
+  width: auto;
+  padding: 6px 10px;
+  background: #e8f4fc;
+  color: #2471a3;
+  border: 1px solid #aed6f1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.weekly-schedule-slot-btn:hover {
+  background: #3498db;
+  color: white;
+}
+
+.weekly-schedule-empty {
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 600px) {
+
+  .weekly-schedule-row {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .weekly-schedule-input {
+    font-size: 16px;
+  }
+
+  .weekly-schedule-display-row {
+    gap: 5px;
+  }
+
+}
